@@ -1,4 +1,3 @@
-# minesweeper
-minesweeper written in python3.4
-ver1 is the non object oriented version
-ver2 is the object oriented version
+# pysweeper
+
+Object-oriented mine-sweeper clone written in python3. Goals are to be scalable and to use ncurses library.
