@@ -88,6 +88,7 @@ def main():
     mine_brd.print_brd()
     mine_brd.plant_mines()
     mine_brd.print_brd()
+    print("it works!")
 
 if __name__ == "__main__":
     main()
