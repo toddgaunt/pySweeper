@@ -10,12 +10,12 @@ import curses
 #TODO implement object oriented minesweeper
 
 class Cell(object):
-    "Is a single cell of the minesweeper board"
+    """Is a single cell of the minesweeper board"""
     def __init__(self, mine=False, revealed=False, tag=False, tile=0):
-        self.mine = mine
-        self.revealed = revealed
-        self.tag = tag
-        self.tile = tile
+        self.mine = mine #
+        self.revealed = revealed # whether or not the player can see the tile
+        self.tag = tag # whether or not the player marked the tile
+        self.tile = tile # the character used to represent the tile
 
     def show(self):
         self.revealed = True
@@ -23,15 +23,15 @@ class Cell(object):
     def flag(self):
         self.tag = not self.tag
 
-    def set_mine(self):
-        self.mine = True
-        self.tile = "X"
-
     def get_tile(self):
         return self.tile
 
+    def set_tile(self, mine=False, tile=0):
+        self.tile = tile
+        self.mine = mine
+
 class Board(object):
-    "The 2d array that acts as the minesweeper board"
+    """This Board object contains Cell objects withing a list to act as the minesweeper game board"""
     def __init__(self, size=10):
         self.size = size
         self.brd = []
@@ -42,18 +42,24 @@ class Board(object):
                 self.brd[y].append(cell)
 
     def print_cell(self, y=0, x=0):
+        # retrieves the Cell from the array and prints it's tile variable
         cur_cell = self.brd[y][x]
         cur_tile = cur_cell.get_tile()
         print (str(cur_tile) + " ", end="")
 
     def print_brd(self):
+        # loops through entire array and prints each Cell objects tile variable, if its revealed. Otherwise uses "#"
         count = self.size - 1
         for y in range(self.size):
             print (str(count) + " - " , end="")
             for x in range(self.size):
                 cur_cell = self.brd[y][x]
-                cur_tile = cur_cell.get_tile()
-                print (str(cur_tile) + " ", end="")
+                #cur_cell.show() uncomment to reveal all tiles
+                if cur_cell.revealed == True:
+                    cur_tile = cur_cell.get_tile()
+                    print (str(cur_tile) + " ", end="")
+                else:
+                    print ("# ", end="")
             count -= 1
             print("")
         count = 0
@@ -74,7 +80,7 @@ class Board(object):
             if cur_cell.get_tile() == "X":
                 continue
             else:
-                cur_cell.set_mine()
+                cur_cell.set_tile(True, "X")
                 count -= 1
 
 def main():
