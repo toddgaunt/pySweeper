@@ -53,11 +53,10 @@ class Board(object):
         for y in range(self.size):
             print (str(count) + " - " , end="")
             for x in range(self.size):
-                cur_cell = self.brd[y][x]
-                #cur_cell.show() uncomment to reveal all tiles
-                if cur_cell.revealed == True:
-                    cur_tile = cur_cell.get_tile()
-                    print (str(cur_tile) + " ", end="")
+                current_cell = self.brd[count][x]
+                #current_cell.show() #uncomment to reveal all tiles
+                if current_cell.revealed == True:
+                    print (str(current_cell.get_tile()) + " ", end="")
                 else:
                     print ("# ", end="")
             count -= 1
@@ -83,12 +82,23 @@ class Board(object):
                 cur_cell.set_tile(True, "X")
                 count -= 1
 
+    def cell_flip(self, y, x):
+        x = int(x)
+        y = int(y)
+        self.brd[y][x].show()
+
 def main():
     mine_brd = Board()
-    mine_brd.print_brd()
     mine_brd.plant_mines()
-    mine_brd.print_brd()
-    print("it works!")
+    game_over = False
+    while game_over == False:
+        mine_brd.print_brd()
+        print("enter x-coordinate")
+        x_coord = input()
+        print("enter y-coordinate")
+        y_coord = input()
+        mine_brd.cell_flip(y_coord, x_coord)
+        print("it works!")
 
 if __name__ == "__main__":
     main()
