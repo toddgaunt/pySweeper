@@ -94,11 +94,16 @@ def main():
     while game_over == False:
         mine_brd.print_brd()
         print("enter x-coordinate")
-        x_coord = input()
+        x = input()
         print("enter y-coordinate")
-        y_coord = input()
-        mine_brd.cell_flip(y_coord, x_coord)
+        y = input()
+        mine_brd.cell_flip(y, x)
         print("it works!")
+
+def get_coords():
+    coords = [y,x]
+
+    return coords
 
 if __name__ == "__main__":
     main()
