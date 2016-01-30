@@ -30,6 +30,10 @@ class Cell(object):
         self.tile = tile
         self.mine = mine
 
+    def increment_tile(self):
+        if self.tile != "X":
+            self.tile += 1
+
 class Board(object):
     """This Board object contains Cell objects withing a list to act as the minesweeper game board"""
     def __init__(self, size=10):
@@ -54,7 +58,7 @@ class Board(object):
             print (str(count) + " - " , end="")
             for x in range(self.size):
                 current_cell = self.brd[count][x]
-                #current_cell.show() #uncomment to reveal all tiles
+                current_cell.show() #uncomment to reveal all tiles
                 if current_cell.revealed == True:
                     print (str(current_cell.get_tile()) + " ", end="")
                 else:
@@ -82,6 +86,20 @@ class Board(object):
                 cur_cell.set_tile(True, "X")
                 count -= 1
 
+    def count_surrounding(self):
+        coordinates = [[-1, -1], [-1, 0], [-1, 1],
+                       [0 , -1],          [0 , 1],
+                       [1 , -1], [1 , 0], [1 , 1]]
+        for y in range(self.size-1):
+            for x in range(self.size-1):
+                if self.brd[y][x].get_tile() == "X":
+                    for i in range(len(coordinates)):
+                        y_offset = y+coordinates[i][0]
+                        x_offset = x+coordinates[i][1]
+                        if y_offset < 0 or x_offset < 0:
+                            continue
+                        self.brd[y_offset][x_offset].increment_tile()
+
     def cell_flip(self, y, x):
         x = int(x)
         y = int(y)
@@ -90,19 +108,19 @@ class Board(object):
 def main():
     mine_brd = Board()
     mine_brd.plant_mines()
+    mine_brd.count_surrounding()
     game_over = False
     while game_over == False:
         mine_brd.print_brd()
-        print("enter x-coordinate")
-        x = input()
-        print("enter y-coordinate")
-        y = input()
-        mine_brd.cell_flip(y, x)
-        print("it works!")
+        coords = get_coords()
+        mine_brd.cell_flip(coords[0], coords[1])
 
 def get_coords():
+    print("Please enter x-coordinate")
+    x = input()
+    print("Please enter y-coordinate")
+    y = input()
     coords = [y,x]
-
     return coords
 
 if __name__ == "__main__":
