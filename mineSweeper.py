@@ -4,8 +4,8 @@
 # minesweeper game
 
 import random
-import os
-import curses
+#import os
+#import curses
 
 #TODO implement object oriented minesweeper
 
@@ -90,13 +90,13 @@ class Board(object):
         coordinates = [[-1, -1], [-1, 0], [-1, 1],
                        [0 , -1],          [0 , 1],
                        [1 , -1], [1 , 0], [1 , 1]]
-        for y in range(self.size-1):
-            for x in range(self.size-1):
+        for y in range(self.size):
+            for x in range(self.size):
                 if self.brd[y][x].get_tile() == "X":
                     for i in range(len(coordinates)):
                         y_offset = y+coordinates[i][0]
                         x_offset = x+coordinates[i][1]
-                        if y_offset < 0 or x_offset < 0:
+                        if y_offset < 0 or y_offset >= self.size or x_offset >= self.size or x_offset < 0:
                             continue
                         self.brd[y_offset][x_offset].increment_tile()
 
