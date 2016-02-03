@@ -4,23 +4,20 @@
 # minesweeper game
 
 import random
-#import os
-#import curses
-
-#TODO implement object oriented minesweeper
 
 class Cell(object):
     """Is a single cell of the minesweeper board"""
     def __init__(self, mine=False, revealed=False, tag=False, tile=0):
-        self.mine = mine #
-        self.revealed = revealed # whether or not the player can see the tile
-        self.tag = tag # whether or not the player marked the tile
-        self.tile = tile # the character used to represent the tile
+        self.mine = mine # Whether or not there is a mine
+        self.revealed = revealed # Whether or not the player can see the tile
+        self.tag = tag # Whether or not the player marked the tile
+        self.tile = tile # The character used to represent the tile
 
     def show(self):
         self.revealed = True
 
     def flag(self):
+        """toggles flags on a tile"""
         self.tag = not self.tag
 
     def get_tile(self):
@@ -34,27 +31,26 @@ class Cell(object):
         if self.tile != "X":
             self.tile += 1
 
-class Board(object):
-    """This Board object contains Cell objects withing a list to act as the minesweeper game board"""
-    def __init__(self, size=10, mine_count=0, revealed_tiles=0):
-        self.size = size
-        self.mine_count = mine_count
+class Board(list):
+    """This Board object contains Cell objects within itself to represent the minesweeper game board"""
+    def __init__(self, x_length=10, y_length=10, mine_count=0, revealed_tiles=0):
+        self.x_length = x_length # Length of board's x-axis
+        self.y_length = y_length # Length of board's y-axis
+        self.mine_count = mine_count # Amount of mines on the board
         self.revealed_tiles = revealed_tiles
-        self.brd = []
-        for y in range(self.size):
-            self.brd.append([])
-            for x in range(self.size):
-                cell = Cell()
-                self.brd[y].append(cell)
+        for y in range(self.y_length):
+            self.append([])
+            for x in range(self.x_length):
+                self[y].append(Cell())
 
     def print_brd(self):
-        # loops through entire array and prints each Cell objects tile variable, if its revealed. Otherwise uses "#"
-        count = self.size - 1
-        for y in range(self.size):
+        """ Loops through entire array and prints each Cell objects tile variable, if its revealed. Otherwise uses "#" """
+        count = self.y_length - 1
+        for y in range(self.y_length):
             print (str(count) + " - " , end="")
-            for x in range(self.size):
-                current_cell = self.brd[count][x]
-                if: current_cell.revealed == True:
+            for x in range(self.x_length):
+                current_cell = self[count][x]
+                if current_cell.revealed == True:
                     print (str(current_cell.get_tile()) + " ", end="")
                 else:
                     print ("# ", end="")
@@ -62,19 +58,20 @@ class Board(object):
             print("")
         count = 0
         print("    ", end="")
-        print("| " * self.size)
+        print("| " * self.x_length)
         print("    ", end="")
-        for i in range(self.size):
+        for i in range(self.x_length):
             print(str(count) + " ", end="")
             count += 1
         print("")
 
     def plant_mines(self):
-        count = self.size
+        """Plants exactly the amount of mines according to algorithm"""
+        count = self.y_length * self.x_length / ((self.y_length + self.x_length) / 2)
         while count > 0:
-            y = random.randint(0, self.size -1)
-            x = random.randint(0, self.size -1)
-            cur_cell = self.brd[y][x]
+            y = random.randint(0, self.y_length -1)
+            x = random.randint(0, self.x_length -1)
+            cur_cell = self[y][x]
             if cur_cell.get_tile() == "X" or cur_cell.revealed:
                 continue
             else:
@@ -83,24 +80,26 @@ class Board(object):
                 count -= 1
 
     def count_surrounding(self):
+        """Uses a coordinate list to check surrounding tiles of mines and increments them if there is no mine"""
         coordinates = [[-1, -1], [-1, 0], [-1, 1],
                        [0 , -1],          [0 , 1],
                        [1 , -1], [1 , 0], [1 , 1]]
-        for y in range(self.size):
-            for x in range(self.size):
-                if self.brd[y][x].get_tile() == "X":
+        for y in range(self.y_length):
+            for x in range(self.x_length):
+                if self[y][x].get_tile() == "X":
                     for i in range(len(coordinates)):
                         y_offset = y+coordinates[i][0]
                         x_offset = x+coordinates[i][1]
-                        if y_offset < 0 or y_offset >= self.size or x_offset >= self.size or x_offset < 0:
+                        if y_offset < 0 or y_offset >= self.y_length or x_offset >= self.x_length or x_offset < 0:
                             continue
-                        self.brd[y_offset][x_offset].increment_tile()
+                        self[y_offset][x_offset].increment_tile()
 
     def cell_flip(self, y, x):
-        x = int(x)
+        """Reveals the tile according to x,y coordinates. If a mine returns True."""
         y = int(y)
-        self.brd[y][x].show()
-        if self.brd[y][x].get_tile() == "X":
+        x = int(x)
+        self[y][x].show()
+        if self[y][x].get_tile() == "X":
             self.revealed_tiles += 1
             return True
         else:
@@ -108,7 +107,7 @@ class Board(object):
             return False
 
     def get_cell(self, y=0, x=0):
-        return self.brd[y][x]
+        return self[y][x]
 
 def main():
     mine_brd = Board()
@@ -123,13 +122,16 @@ def main():
         mine_brd.print_brd()
         coords = get_coords()
         game_over =  mine_brd.cell_flip(coords[0], coords[1])
-        if mine_brd.size * mine_brd.size - mine_brd.mine_count == mine_brd.revealed_tiles:
+        # If the amount of revealed tiles is the amount of tiles - amount of mines
+        if mine_brd.y_length * mine_brd.x_length - mine_brd.mine_count == mine_brd.revealed_tiles:
             game_over = True
             win = True
+    mine_brd.print_brd()
     if win == True:
         print ("You win!")
     else:
         print ("You lose...")
+
 def get_coords():
     print("Please enter x-coordinate")
     x = input()
