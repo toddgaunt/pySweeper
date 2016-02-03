@@ -44,26 +44,28 @@ class Board(list):
                 self[y].append(Cell())
 
     def print_brd(self):
-        """ Loops through entire array and prints each Cell objects tile variable, if its revealed. Otherwise uses "#" """
+        """Concatenates the board to a string, the returns the value."""
+        brdstr = ""
         count = self.y_length - 1
         for y in range(self.y_length):
-            print (str(count) + " - " , end="")
+            brdstr += str(count) + " - "
             for x in range(self.x_length):
                 current_cell = self[count][x]
                 if current_cell.revealed == True:
-                    print (str(current_cell.get_tile()) + " ", end="")
+                    brdstr += str(current_cell.get_tile()) + " "
                 else:
-                    print ("# ", end="")
+                    brdstr += "# "
             count -= 1
-            print("")
+            brdstr += "\n"
         count = 0
-        print("    ", end="")
-        print("| " * self.x_length)
-        print("    ", end="")
+        brdstr += "    "
+        brdstr += "| " * self.x_length + "\n"
+        brdstr += "    "
         for i in range(self.x_length):
-            print(str(count) + " ", end="")
+            brdstr += str(count) + " "
             count += 1
-        print("")
+        brdstr += "\n"
+        return brdstr
 
     def plant_mines(self):
         """Plants exactly the amount of mines according to algorithm"""
@@ -111,7 +113,7 @@ class Board(list):
 
 def main():
     mine_brd = Board()
-    mine_brd.print_brd()
+    print(mine_brd.print_brd())
     coords = get_coords()
     mine_brd.cell_flip(coords[0], coords[1])
     mine_brd.plant_mines()
@@ -119,14 +121,14 @@ def main():
     game_over = False
     win = False
     while game_over == False:
-        mine_brd.print_brd()
+        print(mine_brd.print_brd())
         coords = get_coords()
         game_over =  mine_brd.cell_flip(coords[0], coords[1])
         # If the amount of revealed tiles is the amount of tiles - amount of mines
         if mine_brd.y_length * mine_brd.x_length - mine_brd.mine_count == mine_brd.revealed_tiles:
             game_over = True
             win = True
-    mine_brd.print_brd()
+    print_brd(mine_brd.print_brd())
     if win == True:
         print ("You win!")
     else:
