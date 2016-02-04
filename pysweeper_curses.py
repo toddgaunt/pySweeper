@@ -74,6 +74,10 @@ def main():
         game_board_window.noutrefresh()
         curses.doupdate()
 
+    # End of program
+    restore_term()
+
+def restore_term():
     # Restore terminal settings
     curses.nocbreak()
     curses.echo()
@@ -83,4 +87,8 @@ def main():
     curses.endwin()
 
 if __name__ == "__main__":
-    main()
+    # If there are any exceptions, don't break the terminal!
+    try:
+        main()
+    except:
+        restore_term()
