@@ -96,7 +96,7 @@ class Board(list):
                             continue
                         self[y_offset][x_offset].increment_tile()
 
-    def cell_flip(self, y, x):
+    def flip_cell(self, y, x):
         """Reveals the tile according to x,y coordinates. If a mine returns True."""
         y = int(y)
         x = int(x)
@@ -116,7 +116,7 @@ def main():
     mine_brd = Board()
     print(mine_brd.print_brd())
     coords = get_coords()
-    mine_brd.cell_flip(coords[0], coords[1])
+    mine_brd.flip_cell(coords[0], coords[1])
     mine_brd.plant_mines()
     mine_brd.count_surrounding()
     game_over = False
@@ -125,7 +125,7 @@ def main():
     while game_over == False:
         print(mine_brd.print_brd())
         coords = get_coords()
-        game_over =  mine_brd.cell_flip(coords[0], coords[1])
+        game_over =  mine_brd.flip_cell(coords[0], coords[1])
         if mine_brd.y_length * mine_brd.x_length - mine_brd.mine_count == mine_brd.revealed_tiles:
             game_over = True
             win = True
