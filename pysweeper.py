@@ -111,6 +111,7 @@ class Board(list):
     def get_cell(self, y=0, x=0):
         return self[y][x]
 
+## Terminal output
 def main():
     mine_brd = Board()
     print(mine_brd.print_brd())
@@ -120,11 +121,11 @@ def main():
     mine_brd.count_surrounding()
     game_over = False
     win = False
+    # Main loop starts after 1 turn.
     while game_over == False:
         print(mine_brd.print_brd())
         coords = get_coords()
         game_over =  mine_brd.cell_flip(coords[0], coords[1])
-        # If the amount of revealed tiles is the amount of tiles - amount of mines
         if mine_brd.y_length * mine_brd.x_length - mine_brd.mine_count == mine_brd.revealed_tiles:
             game_over = True
             win = True

@@ -24,6 +24,11 @@ class appGUI():
         curses.cbreak()
         self.stdscr.keypad(True)
 
+        # Interal windows and pads
+        self.brdwin = curses.newwin(30, 30, 0, 0) #height, width, y, x
+        self.estwin = curses.newwin(15, 30, 0, 30) #height, width, y, x
+        self.sthwin = curses.newwin(30, 15, 30, 0) #height, width, y, x
+
     def kill(self):
         # Kills main window
         curses.nocbreak()
@@ -31,25 +36,29 @@ class appGUI():
         curses.echo()
         curses.endwin()
 
-    def brdscr(self):
-        begin_x = 20; begin_y = 7
-        height = 100; width = 100
-        brdscr = curses.newwin(height, width, begin_y, begin_x)
+    def south_window(self):
+        self.sthwin.addstr("hello")
+        self.sthwin.refresh()
 
-        for y in range(self.mine_brd.y_length):
-            for x in range(self.mine_brd.x_length):
-                self.mine_brd.cell_flip(y, x)
-                brdscr.addstr(self.mine_brd.print_brd())
-                brdscr.refresh()
-                brdscr.erase()
+    def east_window(self):
+        self.estwin.addstr("hello")
+        self.estwin.refresh()
+
+    def help_menu(self):
+        pass
+
+    def board_window(self):
+        self.brdwin.addstr("hello")
+        self.brdwin.refresh()
 
 def main(stdscr):
     gui = appGUI(stdscr)
-    gui.brdscr()
+    gui.board_window()
+    gui.south_window()
+    gui.east_window()
     time.sleep(10)
     gui.kill()
 
 
 if __name__ == "__main__":
    curses.wrapper(main)
-
