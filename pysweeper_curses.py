@@ -4,18 +4,22 @@
 # minesweeper game
 
 from pysweeper import Board, Cell
+from curses import wrapper
 import curses
 import time
 
-def main():
-    stdscr = curses.initscr()
+def main(stdscr):
+    #stdscr = curses.initscr()
+    stdscr.clear()
     curses.noecho()
     curses.cbreak()
     curses.curs_set(0)
 
+    # Allows terminals without color to function
     if curses.has_colors():
         curses.start_color()
 
+    # Color pairs (fg, bg)
     curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
     curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
     curses.init_pair(3, curses.COLOR_BLUE, curses.COLOR_BLACK)
@@ -47,26 +51,33 @@ def main():
     # Redraw the screen
     curses.doupdate()
 
-    while True:
+    playing = True
+    while playing:
         player_input = game_window.getch()
 
         if player_input == ord('r') or player_input == ord('R'):
+
+            # Inializes game board
             mine_brd = Board()
             mine_brd.plant_mines()
             mine_brd.count_surrounding()
-            for y in range(mine_brd.y_length):
-                for x in range(mine_brd.x_length):
-                    mine_brd.flip_cell(y,x)
 
+            # Generation message
             game_board_window.clear()
             game_board_window.addstr('You pressed r, adding game board.', curses.color_pair(3))
             game_board_window.refresh()
-            game_board_window.clear()
             time.sleep(1)
-            game_board_window.addstr(mine_brd.print_brd())
+
+            # Adds the actual tiles of the board to the window
+            game_board_window.clear()
+            for y in range(mine_brd.y_length):
+                for x in range(mine_brd.x_length):
+                    mine_brd.flip_cell(y,x)
+            add_brd_str(mine_brd, game_board_window)
+            game_board_window.refresh()
 
         elif player_input == ord('q') or player_input == ord('Q'):
-            break
+            playing = False
 
         # Refresh the windows from the bottom up
         stdscr.noutrefresh()
@@ -76,6 +87,37 @@ def main():
 
     # End of program
     restore_term()
+
+def get_coords():
+    pass
+
+def add_brd_str(board, window):
+    """Displays all cells of the array into a curses window"""
+    y_flip = board.y_length - 1
+    for y in range(board.y_length):
+        window.addstr(y + (curses.LINES//6), (curses.COLS//3), str(y_flip) + "-" )
+        for x in range(board.x_length):
+            if board.get_cell(y_flip,x).revealed:
+                tile = board.get_cell(y_flip,x).get_tile()
+                if tile == "X":
+                    tile_color = 1
+                elif tile == 1:
+                    tile_color = 2
+                else:
+                    tile_color = 3
+                window.addstr(y + (curses.LINES//6),
+                              2 + (x * 2) + (curses.COLS//3),
+                              str(tile),
+                              curses.color_pair(tile_color))
+            else:
+                tile = "#"
+                window.addstr(y + (curses.LINES//6),
+                              2 + (x * 2) + (curses.COLS//3),
+                              str(tile))
+        y_flip -= 1
+    for x in range(board.x_length):
+        window.addstr(1 + y + (curses.LINES//6), 2 + (x * 2) + (curses.COLS//3), "|")
+        window.addstr(2 + y + (curses.LINES//6), 2 + (x * 2) + (curses.COLS//3), str(x))
 
 def restore_term():
     # Restore terminal settings
@@ -87,8 +129,5 @@ def restore_term():
     curses.endwin()
 
 if __name__ == "__main__":
-    # If there are any exceptions, don't break the terminal!
-    try:
-        main()
-    except:
-        restore_term()
+    # Curses wrapper lets me debug without fucking up terminal windows
+    wrapper(main)
