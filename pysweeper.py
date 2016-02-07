@@ -7,10 +7,10 @@ import random
 
 class Cell(object):
     """Is a single cell of the minesweeper board"""
-    def __init__(self, mine=False, revealed=False, tag=False, tile=0):
+    def __init__(self, mine=False, revealed=False, flagged=False, tile=0):
         self.mine = mine # Whether or not there is a mine
         self.revealed = revealed # Whether or not the player can see the tile
-        self.tag = tag # Whether or not the player marked the tile
+        self.flagged = flagged # Whether or not the player marked the tile
         self.tile = tile # The character used to represent the tile
 
     def show(self):
@@ -18,7 +18,7 @@ class Cell(object):
 
     def flag(self):
         """toggles flags on a tile"""
-        self.tag = not self.tag
+        self.flagged = not self.flagged
 
     def get_tile(self):
         return self.tile

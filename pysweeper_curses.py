@@ -23,20 +23,23 @@ def main(stdscr):
     curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
     curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
     curses.init_pair(3, curses.COLOR_BLUE, curses.COLOR_BLACK)
+    curses.init_pair(4, curses.COLOR_WHITE, curses.COLOR_BLACK)
 
     # Adds title and then colors whole line
     stdscr.addstr("Pysweeper 1.0", curses.A_REVERSE)
     stdscr.chgat(-1, curses.A_REVERSE)
 
     # Adds menu at bottom
-    stdscr.addstr(curses.LINES-1,0, "Press r to start the game, q to quit.")
-    stdscr.chgat(curses.LINES-1,7,1,curses.A_BOLD | curses.color_pair(2))
+    text_window = curses.newwin(3,curses.COLS,curses.LINES-3,0)
+    text_window.addstr(1,2, "Press r to start the game, q to quit.")
+    text_window.chgat(1,2,curses.COLS-4,curses.color_pair(3) | curses.A_REVERSE)
+    text_window.box()
 
     # Main window for holding the game board
-    game_window = curses.newwin(curses.LINES-2,curses.COLS,1,0)
+    game_window = curses.newwin(curses.LINES-4,curses.COLS,1,0)
 
     # Subwindow for the game board that makes updating clean
-    game_board_window = game_window.subwin(curses.LINES-6, curses.COLS-4, 3,3)
+    game_board_window = game_window.subwin(curses.LINES-6, curses.COLS-3, 2,2)
 
     # Inital text for subwindow
     game_board_window.addstr("Game goes here.")
@@ -47,6 +50,7 @@ def main(stdscr):
     # Update internal window data structures
     stdscr.noutrefresh()
     game_window.noutrefresh()
+    text_window.noutrefresh()
 
     # Redraw the screen
     curses.doupdate()
@@ -68,13 +72,16 @@ def main(stdscr):
             game_board_window.refresh()
             time.sleep(1)
 
-            # Adds the actual tiles of the board to the window
-            game_board_window.clear()
+            # Some debugging code
             for y in range(mine_brd.y_length):
                 for x in range(mine_brd.x_length):
                     mine_brd.flip_cell(y,x)
+
+            # Adds the actual tiles of the board to the window
+            game_board_window.clear()
             add_brd_str(mine_brd, game_board_window)
             game_board_window.refresh()
+            get_coords(text_window)
 
         elif player_input == ord('q') or player_input == ord('Q'):
             playing = False
@@ -88,8 +95,12 @@ def main(stdscr):
     # End of program
     restore_term()
 
-def get_coords():
-    pass
+def get_coords(window):
+    window.clear
+    window.addstr(1,2, "Enter x and y coordinates: ")
+    window.chgat(1,2,curses.COLS-4, curses.color_pair(2) | curses.A_REVERSE)
+    coords = window.getstr()
+    window.refresh
 
 def add_brd_str(board, window):
     """Displays all cells of the array into a curses window"""
@@ -99,21 +110,24 @@ def add_brd_str(board, window):
         for x in range(board.x_length):
             if board.get_cell(y_flip,x).revealed:
                 tile = board.get_cell(y_flip,x).get_tile()
-                if tile == "X":
-                    tile_color = 1
-                elif tile == 1:
-                    tile_color = 2
-                else:
-                    tile_color = 3
-                window.addstr(y + (curses.LINES//6),
-                              2 + (x * 2) + (curses.COLS//3),
-                              str(tile),
-                              curses.color_pair(tile_color))
+            elif board.get_cell(y_flip,x).flagged == True:
+                tile = "f"
             else:
                 tile = "#"
-                window.addstr(y + (curses.LINES//6),
-                              2 + (x * 2) + (curses.COLS//3),
-                              str(tile))
+
+            if tile == "X":
+                tile_color = 1
+            elif tile == 1:
+                tile_color = 2
+            elif tile >= 2:
+                tile_color = 3
+            else:
+                tile_color = 4
+            window.addstr(y + (curses.LINES//6),
+                          2 + (x * 2) + (curses.COLS//3),
+                          str(tile),
+                          curses.color_pair(tile_color))
+
         y_flip -= 1
     for x in range(board.x_length):
         window.addstr(1 + y + (curses.LINES//6), 2 + (x * 2) + (curses.COLS//3), "|")
