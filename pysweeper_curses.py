@@ -146,6 +146,55 @@ def add_brd_str(board, window):
     """Displays all cells of the array into a curses window"""
     y_flip = board.y_length - 1
     for y in range(board.y_length):
+        window.addstr(y, 0, str(y_flip) + "-" )
+        for x in range(board.x_length):
+            if board.get_cell(y_flip,x).revealed:
+                tile = board.get_cell(y_flip,x).get_tile()
+                if tile == 'X':
+                    tile_color = 2
+                elif tile == 0:
+                    tile_color = 1
+                elif tile == 1:
+                    tile_color = 4
+                elif tile == 2:
+                    tile_color = 3
+                else:
+                    tile_color = 5
+            elif board.get_cell(y_flip,x).flagged == True:
+                tile = "f"
+                tile_color = 1
+            else:
+                tile = "#"
+                tile_color = 1
+            window.addstr(y, 2 + (x*2), str(tile), curses.color_pair(tile_color))
+
+        y_flip -= 1
+    for x in range(board.x_length):
+        window.addstr(1 + y, 2 + (x * 2), "|")
+        window.addstr(2 + y, 2 + (x * 2), str(x))
+    window.refresh()
+
+def restore_term():
+    # Restore terminal settings
+    curses.nocbreak()
+    curses.echo()
+    curses.curs_set(1)
+
+    # Ends curses
+    curses.endwin()
+
+if __name__ == "__main__":
+    # Curses wrapper lets me debug without fucking up terminal windows
+    wrapper(main)
+
+
+# Unused functions
+"""
+def add_brd_str_centered(board, window):
+    window.clear()
+    #Displays all cells of the array into a curses window
+    y_flip = board.y_length - 1
+    for y in range(board.y_length):
         window.addstr(y + (curses.LINES//6), (curses.COLS//3), str(y_flip) + "-" )
         for x in range(board.x_length):
             if board.get_cell(y_flip,x).revealed:
@@ -176,16 +225,4 @@ def add_brd_str(board, window):
         window.addstr(1 + y + (curses.LINES//6), 2 + (x * 2) + (curses.COLS//3), "|")
         window.addstr(2 + y + (curses.LINES//6), 2 + (x * 2) + (curses.COLS//3), str(x))
     window.refresh()
-
-def restore_term():
-    # Restore terminal settings
-    curses.nocbreak()
-    curses.echo()
-    curses.curs_set(1)
-
-    # Ends curses
-    curses.endwin()
-
-if __name__ == "__main__":
-    # Curses wrapper lets me debug without fucking up terminal windows
-    wrapper(main)
+"""
