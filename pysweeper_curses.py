@@ -25,14 +25,14 @@ def main(stdscr):
     if curses.has_colors():
         curses.start_color()
 
-    # Sets Color pairs (fg, bg)
+    # Sets Color pairs for curses to use (fg, bg)
     curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLACK)
     curses.init_pair(2, curses.COLOR_RED, curses.COLOR_BLACK)
     curses.init_pair(3, curses.COLOR_GREEN, curses.COLOR_BLACK)
     curses.init_pair(4, curses.COLOR_BLUE, curses.COLOR_BLACK)
     curses.init_pair(5, curses.COLOR_YELLOW, curses.COLOR_BLACK)
 
-    # Adds title and then colors whole line
+    # Adds title and then colors whole line to top of stdscr
     stdscr.addstr(0,0, "Pysweeper 1.0", curses.A_REVERSE)
     stdscr.chgat(-1, curses.A_REVERSE)
 
@@ -69,7 +69,7 @@ def main(stdscr):
             # Initializes board
             mine_brd = Board()
 
-            # Generation message
+            # Board generation message
             game_board_window.clear()
             game_board_window.addstr('Generating a board with {} length and {} height with {} mines.'.format(mine_brd.x_length, mine_brd.y_length, mine_brd.mine_count), curses.color_pair(3))
             game_board_window.refresh()
@@ -77,6 +77,7 @@ def main(stdscr):
 
             # asks for first coordinate to prevent first selection
             # from being a mine, then plants mines and increments the tiles
+            #TODO FIX THIS THE ABOVE COMMENTS ARE NOT TRUE RIGHT NOW!
             add_brd_str(window=game_board_window, board=mine_brd)
             mine_brd.plant_mines()
             mine_brd.count_surrounding()
