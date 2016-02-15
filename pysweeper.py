@@ -21,6 +21,7 @@ class Cell(object):
         self.flagged = not self.flagged
 
     def get_tile(self):
+        """returns a string if the tile is an X, an int if the tile is a number"""
         return self.tile
 
     def set_tile(self, mine=False, tile=0):
@@ -69,7 +70,7 @@ class Board(list):
 
     def plant_mines(self):
         """Plants exactly the amount of mines according to algorithm"""
-        count = self.y_length * self.x_length / ((self.y_length + self.x_length) / 2)
+        count = (self.y_length * self.x_length / ((self.y_length + self.x_length) / 2))
         while count > 0:
             y = random.randint(0, self.y_length -1)
             x = random.randint(0, self.x_length -1)
@@ -96,28 +97,44 @@ class Board(list):
                             continue
                         self[y_offset][x_offset].increment_tile()
 
-    def flip_cell(self, y, x):
-        """Reveals the tile according to x,y coordinates. If a mine returns True."""
-        y = int(y)
-        x = int(x)
-        self[y][x].show()
-        if self[y][x].get_tile() == "X":
-            self.revealed_tiles += 1
-            return True
-        else:
-            self.revealed_tiles += 1
-            return False
-
     def get_cell(self, y=0, x=0):
         return self[y][x]
 
-    def auto_reveal(self):
+    def flip_cell(self, y, x):
+        """Reveals the tile according to x,y coordinates. If the tile is a  mine returns True, else False."""
+        coordinates = [          [-1, 0],
+                       [0 , -1],          [0 , 1],
+                                 [1 , 0]]
+        y = int(y)
+        x = int(x)
+        if self[y][x].revealed:
+            return False
+
+        # Reveals current cell
+        self[y][x].show()
+        self.revealed_tiles += 1
+
+        if self[y][x].get_tile() == "X":
+            return True
+
+        if self[y][x].get_tile() == 0:
+            for i in range(len(coordinates)):
+                y_offset = y+coordinates[i][0]
+                x_offset = x+coordinates[i][1]
+                if y_offset < 0 or y_offset >= self.y_length or x_offset >= self.x_length or x_offset < 0:
+                    continue
+                self.flip_cell(y_offset, x_offset)
+
+    @property
+    def remaining_mines():
         pass
 
+    @property
+    def revealed_tile_count():
+        pass
 
-## Terminal output
 def main():
-    """Main driver function"""
+    """Main driver function, prints to the console"""
     mine_brd = Board()
     print(mine_brd.print_brd())
     coords = get_coords()

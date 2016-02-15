@@ -12,6 +12,7 @@ import re
 def main(stdscr):
     """Main loop for gameplay"""
     # Initial variables
+    win = False
     win_counter = 0
     loss_counter = 0
     playing = True
@@ -77,9 +78,9 @@ def main(stdscr):
             # asks for first coordinate to prevent first selection
             # from being a mine, then plants mines and increments the tiles
             add_brd_str(window=game_board_window, board=mine_brd)
-            get_coords(window=text_sub_window, board=mine_brd)
             mine_brd.plant_mines()
             mine_brd.count_surrounding()
+            get_coords(window=text_sub_window, board=mine_brd)
 
             game_over = False
             win = False
@@ -98,9 +99,9 @@ def main(stdscr):
             elif win == False:
                 loss_counter += 1
             # Prints game info to player after game is over
-            add_brd_str(window=game_board_window, board=mine_brd)
             game_board_window.clear()
-            window.addstr("Win = {}. You have {} wins and {} losses.".format(win, win_counter, loss_counter))
+            add_brd_str(window=game_board_window, board=mine_brd)
+            game_board_window.addstr("\nWin = {}. You have {} wins and {} losses.".format(win, win_counter, loss_counter))
             game_board_window.refresh()
 
 
@@ -163,7 +164,6 @@ def get_coords(window, board):
 
     x = int(coords[0])
     y = int(coords[1])
-
     if coords[2] == 'f':
         board[y][x].flag()
     else:
