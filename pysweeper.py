@@ -113,6 +113,7 @@ class Board(list):
 
 ## Terminal output
 def main():
+    """Main driver function"""
     mine_brd = Board()
     print(mine_brd.print_brd())
     coords = get_coords()
@@ -129,13 +130,14 @@ def main():
         if mine_brd.y_length * mine_brd.x_length - mine_brd.mine_count == mine_brd.revealed_tiles:
             game_over = True
             win = True
-    print_brd(mine_brd.print_brd())
+    mine_brd.print_brd()
     if win == True:
         print ("You win!")
     else:
         print ("You lose...")
 
 def get_coords():
+    """Gets coordinate input from the player"""
     print("Please enter x-coordinate")
     x = input()
     print("Please enter y-coordinate")
