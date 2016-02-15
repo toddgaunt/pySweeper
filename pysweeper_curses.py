@@ -9,8 +9,6 @@ import curses
 import time
 import re
 
-#TODO, refactor main() into a class so that the game can be expanded to multiple boards being played
-
 def main(stdscr):
     """Main loop for gameplay"""
     # Initial variables
@@ -52,7 +50,9 @@ def main(stdscr):
     # Update internal window data structures
     stdscr.noutrefresh()
     game_window.noutrefresh()
+    game_board_window.noutrefresh()
     text_window.noutrefresh()
+    text_sub_window.noutrefresh()
 
     # Redraw the screen
     curses.doupdate()
@@ -99,8 +99,10 @@ def main(stdscr):
                 loss_counter += 1
             # Prints game info to player after game is over
             add_brd_str(window=game_board_window, board=mine_brd)
-            time.sleep(1)
-            add_game_info(game_board_window, win, win_counter, loss_counter)
+            game_board_window.clear()
+            window.addstr("Win = {}. You have {} wins and {} losses.".format(win, win_counter, loss_counter))
+            game_board_window.refresh()
+
 
         elif player_input == ord('q') or player_input == ord('Q'):
             playing = False
@@ -111,6 +113,7 @@ def main(stdscr):
         game_board_window.noutrefresh()
         text_window.noutrefresh()
         text_sub_window.noutrefresh()
+        # Redraws the screen
         curses.doupdate()
 
     # End of program
@@ -201,12 +204,6 @@ def add_brd_str(window, board):
         window.addstr(2 + y, 2 + (x * 2), str(x))
     window.refresh()
 
-def add_game_info(window, win, win_counter, loss_counter):
-    """Adds game information string to desired window"""
-    window.clear()
-    window.addstr("Win = {}. You have {} wins and {} losses.".format(win, win_counter, loss_counter))
-    window.refresh()
-
 def restore_term():
     """Restore terminal settings"""
     curses.nocbreak()
@@ -219,42 +216,3 @@ def restore_term():
 if __name__ == "__main__":
     """Curses wrapper lets me debug without fucking up terminal windows"""
     wrapper(main)
-
-
-""" Unused functions
-    def add_brd_str_centered(board, window):
-        window.clear()
-        #Displays all cells of the array into a curses window
-        y_flip = board.y_length - 1
-        for y in range(board.y_length):
-            window.addstr(y + (curses.LINES//6), (curses.COLS//3), str(y_flip) + "-" )
-            for x in range(board.x_length):
-                if board.get_cell(y_flip,x).revealed:
-                    tile = board.get_cell(y_flip,x).get_tile()
-                    if tile == 'X':
-                        tile_color = 2
-                    elif tile == 0:
-                        tile_color = 1
-                    elif tile == 1:
-                        tile_color = 4
-                    elif tile == 2:
-                        tile_color = 3
-                    else:
-                        tile_color = 5
-                elif board.get_cell(y_flip,x).flagged == True:
-                    tile = "f"
-                    tile_color = 1
-                else:
-                    tile = "#"
-                    tile_color = 1
-                window.addstr(y + (curses.LINES//6),
-                              2 + (x * 2) + (curses.COLS//3),
-                              str(tile),
-                              curses.color_pair(tile_color))
-
-            y_flip -= 1
-        for x in range(board.x_length):
-            window.addstr(1 + y + (curses.LINES//6), 2 + (x * 2) + (curses.COLS//3), "|")
-            window.addstr(2 + y + (curses.LINES//6), 2 + (x * 2) + (curses.COLS//3), str(x))
-        window.refresh()
-    """
