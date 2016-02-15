@@ -34,7 +34,7 @@ def main(stdscr):
     curses.init_pair(5, curses.COLOR_YELLOW, curses.COLOR_BLACK)
 
     # Adds title and then colors whole line
-    stdscr.addstr("Pysweeper 1.0", curses.A_REVERSE)
+    stdscr.addstr(0,0, "Pysweeper 1.0", curses.A_REVERSE)
     stdscr.chgat(-1, curses.A_REVERSE)
 
     # Adds menu at bottom
@@ -98,6 +98,8 @@ def main(stdscr):
             elif win == False:
                 loss_counter += 1
             # Prints game info to player after game is over
+            add_brd_str(window=game_board_window, board=mine_brd)
+            time.sleep(1)
             add_game_info(game_board_window, win, win_counter, loss_counter)
 
         elif player_input == ord('q') or player_input == ord('Q'):
@@ -126,7 +128,7 @@ def get_coords(window, board):
         caught_str = window.getstr(0,27).decode(encoding="utf-8")
         curses.noecho()
         window.refresh()
-        # Compares
+        # Compares against regex
         re_match = xyf.match(str(caught_str))
         # If no match, print error message
         if re_match == None:
@@ -162,8 +164,7 @@ def get_coords(window, board):
     if coords[2] == 'f':
         board[y][x].flag()
     else:
-        board.flip_cell(y,x)
-        if board[y][x].mine:
+        if board.flip_cell(y,x):
             return True
     return False
 

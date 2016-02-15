@@ -111,6 +111,10 @@ class Board(list):
     def get_cell(self, y=0, x=0):
         return self[y][x]
 
+    def auto_reveal(self):
+        pass
+
+
 ## Terminal output
 def main():
     """Main driver function"""
