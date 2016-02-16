@@ -7,10 +7,11 @@ import random
 
 class Cell(object):
     """Is a single cell of the minesweeper board"""
-    def __init__(self, mine=False, revealed=False, flagged=False, _tile=0):
+    def __init__(self, mine=False, revealed=False, flagged=False, selected=False, _tile=0):
         self.mine = mine # Whether or not there is a mine
         self.revealed = revealed # Whether or not the player can see the tile
         self.flagged = flagged # Whether or not the player marked the tile
+        self.selected = selected # Whether or not the player has selected this tile
         self._tile = _tile # The character used to represent the tile
 
     def reveal(self):
@@ -30,6 +31,8 @@ class Cell(object):
         self._tile = value
         if value == "X":
             self.mine = True
+        else:
+            self.mine = False
 
     def increment_tile(self):
         """If the tile is not a mine, increment it by 1"""
@@ -78,7 +81,7 @@ class Board(list):
         while count > 0:
             y = random.randint(0, self.y_length -1)
             x = random.randint(0, self.x_length -1)
-            if self[y][x].mine or self[y][x].revealed:
+            if self[y][x].mine or self[y][x].selected:
                 continue
             else:
                 self[y][x].tile = "X"# mine=True
