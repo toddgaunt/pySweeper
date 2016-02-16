@@ -8,6 +8,8 @@ from curses import wrapper
 import curses
 import time
 import re
+#TODO make AppUI object out of main, and allow for terminal resizing
+# Also add game timer and reveal all mines after game_over
 
 def main(stdscr):
     """Main loop for gameplay"""
@@ -71,7 +73,7 @@ def main(stdscr):
 
             # Board generation message
             game_board_window.clear()
-            game_board_window.addstr('Generating a board with {} length and {} height with {} mines.'.format(mine_brd.x_length, mine_brd.y_length, mine_brd.mine_count), curses.color_pair(3))
+            game_board_window.addstr('Generating a board with {} length and {} height with {} mines.'.format(mine_brd.x_length, mine_brd.y_length, mine_brd.mined_tiles), curses.color_pair(3))
             game_board_window.refresh()
             time.sleep(1)
 
@@ -91,7 +93,7 @@ def main(stdscr):
                 game_over = get_coords(window=text_sub_window, board=mine_brd)
                 if game_over:
                     break
-                elif mine_brd.y_length * mine_brd.x_length - mine_brd.mine_count == mine_brd.revealed_tiles:
+                elif mine_brd.y_length * mine_brd.x_length - mine_brd.mined_tiles == mine_brd.revealed_tiles:
                     win = True
                     break
             # Increments wins and losses
@@ -179,25 +181,25 @@ def add_brd_str(window, board):
     for y in range(board.y_length):
         window.addstr(y, 0, str(y_flip) + "-" )
         for x in range(board.x_length):
-            if board.get_cell(y_flip,x).revealed:
-                tile = board.get_cell(y_flip,x).get_tile()
-                if tile == 'X':
+            if board[y_flip][x].revealed:
+                tilech = board[y_flip][x].tile
+                if tilech == 'X':
                     tile_color = 2
-                elif tile == 0:
+                elif tilech == "0":
                     tile_color = 1
-                elif tile == 1:
+                elif tilech == "1":
                     tile_color = 4
-                elif tile == 2:
+                elif tilech == "2":
                     tile_color = 3
                 else:
                     tile_color = 5
-            elif board.get_cell(y_flip,x).flagged == True:
-                tile = "f"
+            elif board[y_flip][x].flagged == True:
+                tilech = "f"
                 tile_color = 1
             else:
-                tile = "#"
+                tilech = "#"
                 tile_color = 1
-            window.addstr(y, 2 + (x*2), str(tile), curses.color_pair(tile_color))
+            window.addstr(y, 2 + (x*2), str(tilech), curses.color_pair(tile_color))
 
         y_flip -= 1
     for x in range(board.x_length):
