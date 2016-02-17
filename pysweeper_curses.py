@@ -76,7 +76,6 @@ class AppUI(object):
         while True:
             self.draw_windows()
             self.add_brd_str(self.sub_windows[0], board)
-            self.prompt_message(self.sub_windows[1])
             window.clear()
             window.addstr(0,0, "Enter x and y coordinates: x,y")
             window.chgat(0,0,curses.COLS-4, curses.color_pair(3))
