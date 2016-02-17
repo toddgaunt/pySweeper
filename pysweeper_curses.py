@@ -197,6 +197,8 @@ class AppUI(object):
         # Update internal window data structures
         for i in range(len(self.windows)):
             self.windows[i].noutrefresh()
+        for i in range(len(self.sub_windows)):
+            self.sub_windows[i].noutrefresh()
 
         # Redraws the screen
         curses.doupdate()
