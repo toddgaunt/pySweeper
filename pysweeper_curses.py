@@ -244,6 +244,7 @@ def main(stdscr):
             UI.increment_stats()
             # Prints game info to player after game is over
             UI.info_message(UI.sub_windows[0])
+            time.sleep(1)
 
         elif player_input == ord('q') or player_input == ord('Q'):
             UI.playing = False
