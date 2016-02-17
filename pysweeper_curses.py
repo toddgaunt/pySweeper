@@ -74,6 +74,9 @@ class AppUI(object):
         """Catches String input from user, and returns a list with 3 groups, (x)(y)(f)."""
         xyf = re.compile(r"([0-9]+),([0-9]+)(f?)")
         while True:
+            self.draw_windows()
+            self.add_brd_str(self.sub_windows[0], board)
+            self.prompt_message(self.sub_windows[1])
             window.clear()
             window.addstr(0,0, "Enter x and y coordinates: x,y")
             window.chgat(0,0,curses.COLS-4, curses.color_pair(3))
@@ -192,8 +195,6 @@ class AppUI(object):
         # draws title message
         self.title_message(self.windows[2])
 
-        self.stdscr.addstr(0,0, "Pysweeper 1.1", curses.A_REVERSE)
-        self.stdscr.chgat(-1, curses.A_REVERSE)
         # Update internal window data structures
         for i in range(len(self.windows)):
             self.windows[i].noutrefresh()
