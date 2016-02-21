@@ -129,44 +129,15 @@ class Board(list):
                 self.flip_cell(y_offset, x_offset)
         return False
 
-    def mined_tiles_count():
-        """Counts up all mines"""
-        tmp = 0
-        for y in range(self.y_length):
-            for x in range(self.x_length):
-                if self[y][x].mine():
-                    tmp += 1
-        self.mined_tiles = tmp
-        return tmp
-
-    def revealed_tiles_count():
-        """Counts up all tiles that have revealed=True"""
-        tmp = 0
-        for y in range(self.y_length):
-            for x in range(self.x_length):
-                if not self[y][x].mine():
-                    tmp += 1
-        self.revealed_tiles = tmp
-        return tmp
-
-    def flagged_tiles_count():
-        """Counts up all tiles that have revealed=True"""
-        tmp = 0
-        for y in range(self.y_length):
-            for x in range(self.x_length):
-                if not self[y][x].mine():
-                    tmp += 1
-        self.flagged_tiles = tmp
-        return tmp
-
 def main():
     """Main driver function, prints to the console"""
     mine_brd = Board()
     print(mine_brd.print_brd())
     coords = get_coords()
-    mine_brd.flip_cell(coords[0], coords[1])
+    mine_brd[int(coords[0])][int(coords[1])].selected = True
     mine_brd.plant_mines()
     mine_brd.count_surrounding()
+    mine_brd.flip_cell(coords[0], coords[1])
     game_over = False
     win = False
     # Main loop starts after 1 turn.

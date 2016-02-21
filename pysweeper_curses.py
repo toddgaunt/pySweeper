@@ -74,8 +74,6 @@ class AppUI(object):
         """Catches String input from user, and returns a list with 3 groups, (x)(y)(f)."""
         xyf = re.compile(r"([0-9]+),([0-9]+)(f?)")
         while True:
-            self.draw_windows()
-            self.add_brd_str(self.sub_windows[0], board)
             window.clear()
             window.addstr(0,0, "Enter x and y coordinates: x,y")
             window.chgat(0,0,curses.COLS-4, curses.color_pair(3))
@@ -112,8 +110,6 @@ class AppUI(object):
                 coords.append(re_match.group(1))
                 coords.append(re_match.group(2))
                 coords.append(re_match.group(3))
-                # Marks the cell as selected so that the plan_mines() function won't plant a mine there
-                board[int(coords[1])][int(coords[0])].selected = True
                 return coords
 
     def parse_coords(self, coords, board):
@@ -231,6 +227,8 @@ def main(stdscr):
             # Doesn't plant any mines or increment tiles until first coordinate has been chosen
             UI.add_brd_str(window=UI.sub_windows[0], board=mine_brd)
             coords = UI.get_coords(window=UI.sub_windows[1], board=mine_brd)
+            # Marks the cell as selected so that the plant_mines() function won't plant a mine there
+            mine_brd[int(coords[1])][int(coords[0])].selected = True
             mine_brd.plant_mines()
             mine_brd.count_surrounding()
             game_over = UI.parse_coords(coords, mine_brd)
