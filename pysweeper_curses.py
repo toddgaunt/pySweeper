@@ -160,7 +160,8 @@ class AppUI(object):
             window.addstr(2 + y, 2 + (x * 2), str(x))
         window.refresh()
 
-    def increment_stats(self):
+    def update_stats(self):
+        """Updates all game stats"""
         if self.win == True:
             self.win_counter += 1
         elif self.win == False:
@@ -243,7 +244,7 @@ def main(stdscr):
                 if game_over:
                     break
             # Increments wins and losses
-            UI.increment_stats()
+            UI.update_stats()
             # Prints game info to player after game is over
             UI.info_message(UI.sub_windows[0])
             time.sleep(1)
