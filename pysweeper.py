@@ -75,9 +75,9 @@ class Board(list):
         brdstr += "\n"
         return brdstr
 
-    def plant_mines(self):
+    def plant_mines(self, diff):
         """Plants exactly the amount of mines according to algorithm"""
-        count = (self.y_length * self.x_length / ((self.y_length + self.x_length) / 2))
+        count = (self.y_length * self.x_length / ((self.y_length + self.x_length) / diff))
         while count > 0:
             y = random.randint(0, self.y_length -1)
             x = random.randint(0, self.x_length -1)

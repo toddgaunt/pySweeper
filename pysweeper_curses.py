@@ -15,8 +15,17 @@ import re
 class AppUI(object):
     def __init__(self, stdscr):
         # Initial variables
-        self.menu = True
+        # This value tells the windows which messages to show. Values are "menu" "gamescr" and "options"
+        self.prompt="menu"
+
+        # Tracks if game should close or not
         self.playing = True
+
+        # Initial placeholder game board
+        self.mine_brd = Board()
+
+        self.board_size=10
+        self.difficulty=5
         self.win = False
         self.win_counter = 0
         self.loss_counter = 0
@@ -49,14 +58,12 @@ class AppUI(object):
         self.windows.update({"board": curses.newwin(curses.LINES-4, curses.COLS,1,0)})
         self.sub_windows.update({"board": curses.newwin(curses.LINES-7, curses.COLS-3, 2, 2)})
         self.windows["board"].box()
-        self.add_brd_str(self.sub_windows["board"])
 
     def prompt_window(self):
         # Draws prompt_window
         self.windows.update({"prompt": curses.newwin(3, curses.COLS, curses.LINES-3, 0)})
         self.sub_windows.update({"prompt": curses.newwin(1, curses.COLS-4, curses.LINES-2,2)})
         self.windows["prompt"].box()
-        self.prompt_message(self.sub_windows["prompt"])
 
     def title_window(self):
         # Draws title_window
@@ -68,62 +75,46 @@ class AppUI(object):
     def prompt_message(self, window):
         """Depending on class variables menu, playing, and game_over, different prompts
         are displayed, calls info_message and get_coords to do so."""
-        if self.menu:
+        if self.prompt=="options":
             window.clear()
-            window.addstr(0,0, "Press r to start the game, q to quit.")
+            window.addstr(0,0, "Press a/z to inc/dec diff, b for back.")
             window.chgat(0,0,curses.COLS-4,curses.color_pair(4))
-        elif self.playing:
+        elif self.prompt=="menu":
+            window.clear()
+            window.addstr(0,0, "Press r to start the game, o for options, q to quit.")
+            window.chgat(0,0,curses.COLS-4,curses.color_pair(4))
+        elif self.prompt=="gamescr":
             window.clear()
             window.addstr(0,0,"Enter x and y coordinates: x,y")
             window.chgat(0,0,curses.COLS-4, curses.color_pair(3))
         else:
             window.clear()
             window.addstr("Win = {}. You have {} wins and {} losses.".format(self.win, self.win_counter, self.loss_counter))
-            window.refresh()
-
-    def get_coords(self, window, board):
-        """Catches String input from user, and returns a list with 3 groups, (x)(y)(f)."""
-        xyf = re.compile(r"([0-9]+),([0-9]+)(f?)")
-        while True:
-            window.clear()
-            window.addstr(0,0, "Enter x and y coordinates: x,y")
             window.chgat(0,0,curses.COLS-4, curses.color_pair(3))
-            # Takes string for coordinates
-            curses.echo()
-            caught_str=""
-            while True:
-                caught_str += window.getstr(0,27).decode(encoding="utf-8")
-            curses.noecho()
-            window.refresh()
-            # Compares against regex
-            re_match = xyf.match(str(caught_str))
-            # If no match, print error message
-            if re_match == None:
-                window.clear()
-                window.addstr(0,0,"Not a coordinate (Press any key to continue).")
-                window.chgat(0,0,curses.COLS-4, curses.color_pair(2) | curses.A_REVERSE)
-                window.refresh()
-                window.getch()
-                continue
-            # If coordinates are out of bounds, print error message
-            elif int(re_match.group(1)) >= board.x_length or int(re_match.group(2)) >= board.y_length:
-                window.clear()
-                window.addstr(0,0,"Coordinates are out of bounds (press any key to continue).")
-                window.chgat(0,0,curses.COLS-4, curses.color_pair(2) | curses.A_REVERSE)
-                window.refresh()
-                window.getch()
-                continue
-            # If every test is passed, modify the board coordinates as a 3-index list
-            else:
-                window.clear()
-                window.addstr(0,0,re_match.group(0) + " are valid coordinates")
-                window.chgat(0,0,curses.COLS-4, curses.color_pair(3))
-                window.refresh()
-                coords = []
-                coords.append(re_match.group(1))
-                coords.append(re_match.group(2))
-                coords.append(re_match.group(3))
-                return coords
+
+    def menu_input(self, input):
+        if input == ord('r'):
+            self.prompt="gamescr"
+            self.make_board()
+        if input == ord('o'):
+            self.prompt="options"
+        if input == ord('q'):
+            self.playing=False
+
+    def options_input(self, input):
+        if input == ord('a'):
+            if self.difficulty<10:
+                self.difficulty+=1
+        if input == ord('z'):
+            if self.difficulty>1:
+                self.difficulty-=1
+        if input == ord('b'):
+            self.prompt="menu"
+
+    def playing_input(self, input):
+        if input == ord('q'):
+            self.playing=False
+        pass
 
     def parse_coords(self, coords, board):
         x = int(coords[0])
@@ -137,9 +128,11 @@ class AppUI(object):
         return False
 
     def add_brd_str(self, window):
-        """Displays all cells of the array into a curses window"""
+        """Displays string onto board window, usually all cells of the array into a curses window"""
         board = self.mine_brd
-        if not self.menu:
+        if self.prompt == "menu":
+            pass
+        elif self.prompt == "gamescr":
             window.clear()
             y_flip = board.y_length - 1
             for y in range(board.y_length):
@@ -168,10 +161,15 @@ class AppUI(object):
             for x in range(board.x_length):
                 window.addstr(1 + y, 2 + (x * 2), "|")
                 window.addstr(2 + y, 2 + (x * 2), str(x))
+        elif self.prompt == "options":
+            window.clear()
+            window.addstr("difficulty: "+str(self.difficulty)+"\n")
+            window.addstr("wins: "+str(self.win_counter)+"\n")
+            window.addstr("losses: "+str(self.loss_counter)+"\n")
 
     def make_board(self):
         self.mine_brd = Board()
-        self.mine_brd.plant_mines()
+        self.mine_brd.plant_mines(self.difficulty)
         self.mine_brd.count_surrounding()
         for y in range(self.mine_brd.y_length):
             for x in range(self.mine_brd.x_length):
@@ -188,16 +186,17 @@ class AppUI(object):
         """Handles input and refreshes windows"""
         # If in menu input is handled here, windows will resize correctly, if done after they won't
         # Absolutely must handle input only once and quickly
-        if self.menu == True:
-            input = self.stdscr.getch()
-            if input == ord('r'):
-                self.menu = False
-            if input == ord('q'):
-                self.playing=False
+        input = self.stdscr.getch()
+        if self.prompt=="options":
+            self.options_input(input)
+        elif self.prompt=="menu":
+            self.menu_input(input)
+        elif self.prompt=="gamescr":
+            self.playing_input(input)
         else:
-            input = self.stdscr.getch()
-            #self.get_coords() #use a function to get input for coords
+            pass
 
+        # Resizes main screen
         y, x = self.stdscr.getmaxyx()
         curses.resize_term(y, x)
         curses.KEY_RESIZE
@@ -207,6 +206,11 @@ class AppUI(object):
         self.prompt_window()
         self.board_window()
 
+        # Adds the str to the windows
+        self.add_brd_str(self.sub_windows["board"])
+        self.prompt_message(self.sub_windows["prompt"])
+
+        # Refreshes all windows
         for i in self.windows:
             self.windows[i].noutrefresh()
 
@@ -215,7 +219,7 @@ class AppUI(object):
 
         curses.doupdate()
 
-    def draw_once(self):
+    def init_windows(self):
         """Refreshes all windows once without handling input"""
         y, x = self.stdscr.getmaxyx()
         curses.resize_term(y, x)
@@ -226,6 +230,10 @@ class AppUI(object):
         self.prompt_window()
         self.board_window()
 
+        # Adds the str to the windows
+        self.add_brd_str(self.sub_windows["board"])
+        self.prompt_message(self.sub_windows["prompt"])
+
         for i in self.windows:
             self.windows[i].noutrefresh()
 
@@ -233,7 +241,6 @@ class AppUI(object):
             self.sub_windows[i].noutrefresh()
 
         curses.doupdate()
-
 
     def restore_term(self):
         """Restore terminal settings"""
@@ -246,8 +253,7 @@ class AppUI(object):
 
 def main(stdscr):
     UI = AppUI(stdscr)
-    UI.make_board()
-    UI.draw_once()
+    UI.init_windows()
     while UI.playing:
         UI.refresh_windows()
 
