@@ -135,7 +135,7 @@ def main():
     print(mine_brd.print_brd())
     coords = get_coords()
     mine_brd[int(coords[0])][int(coords[1])].selected = True
-    mine_brd.plant_mines()
+    mine_brd.plant_mines(2)
     mine_brd.count_surrounding()
     mine_brd.flip_cell(coords[0], coords[1])
     game_over = False

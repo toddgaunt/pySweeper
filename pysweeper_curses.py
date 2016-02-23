@@ -8,9 +8,6 @@ from curses import wrapper
 import curses
 import time
 import re
-#TODO Refactor to make cleaner
-#TODO extend curses windows class to enable window naming, so its easy to lookup window without
-# caring about it's index number
 
 class AppUI(object):
     def __init__(self, stdscr):
