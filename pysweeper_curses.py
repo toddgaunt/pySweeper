@@ -120,7 +120,7 @@ class AppUI(object):
         if input == ord('b'):
             self.prompt="menu"
         if input == ord('r'):
-            self.revealed=True
+            self.revealed=not self.revealed
         if input == 'q':
             self.playing=False
 
@@ -194,6 +194,7 @@ class AppUI(object):
             window.addstr("difficulty: "+str(self.difficulty)+"\n")
             window.addstr("wins: "+str(self.win_counter)+"\n")
             window.addstr("losses: "+str(self.loss_counter)+"\n")
+            window.addstr("revealed: "+str(self.revealed)+"\n")
 
     def make_board(self):
         self.mine_brd = Board()
@@ -288,9 +289,6 @@ def main(stdscr):
     # End of program
     UI.restore_term()
     print ("You had {} wins and {} losses!".format(UI.win_counter, UI.loss_counter))
-
-def get_coords(input):
-    pass
 
 if __name__ == "__main__":
     """Curses wrapper lets me debug without fucking up terminal windows"""
