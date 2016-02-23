@@ -16,7 +16,7 @@ class AppUI(object):
     def __init__(self, stdscr):
         # Initial variables
         self.menu = True
-        self.playing = False
+        self.playing = True
         self.win = False
         self.win_counter = 0
         self.loss_counter = 0
@@ -68,21 +68,20 @@ class AppUI(object):
     def prompt_message(self, window):
         """Depending on class variables menu, playing, and game_over, different prompts
         are displayed, calls info_message and get_coords to do so."""
-        #if self.playing:
-        #    self.get_coords(window)
-        if False:
-            pass
-        elif self.menu:
+        curses.echo()
+        if self.menu:
             window.clear()
             window.addstr(0,0, "Press r to start the game, q to quit.")
             window.chgat(0,0,curses.COLS-4,curses.color_pair(4))
+        elif self.playing:
+            window.clear()
+            window.addstr(0,0,"Enter x and y coordinates: x,y")
+            window.chgat(0,0,curses.COLS-4, curses.color_pair(3))
         else:
-            self.info_message(window)
-
-    def info_message(self, window):
-        window.clear()
-        window.addstr("Win = {}. You have {} wins and {} losses.".format(self.win, self.win_counter, self.loss_counter))
-        window.refresh()
+            window.clear()
+            window.addstr("Win = {}. You have {} wins and {} losses.".format(self.win, self.win_counter, self.loss_counter))
+            window.refresh()
+        curses.noecho()
 
     def get_coords(self, window, board):
         """Catches String input from user, and returns a list with 3 groups, (x)(y)(f)."""
@@ -142,7 +141,7 @@ class AppUI(object):
     def add_brd_str(self, window):
         """Displays all cells of the array into a curses window"""
         board = self.mine_brd
-        if self.playing:
+        if not self.menu:
             window.clear()
             y_flip = board.y_length - 1
             for y in range(board.y_length):
@@ -171,8 +170,6 @@ class AppUI(object):
             for x in range(board.x_length):
                 window.addstr(1 + y, 2 + (x * 2), "|")
                 window.addstr(2 + y, 2 + (x * 2), str(x))
-        else:
-            pass
 
     def make_board(self):
         self.mine_brd = Board()
@@ -218,13 +215,24 @@ class AppUI(object):
 
 def main(stdscr):
     UI = AppUI(stdscr)
-    UI.playing = True
     UI.make_board()
     while True:
         UI.refresh_windows()
-        UI.stdscr.getch()
+        input = UI.stdscr.getch()
+        if UI.menu == True:
+            if input == ord('r'):
+                UI.menu = False
+                continue
+            if input == ord('q'):
+                break
+        else:
+            get_coords(input)
+
     # End of program
     UI.restore_term()
+
+def get_coords(input):
+    pass
 
 if __name__ == "__main__":
     """Curses wrapper lets me debug without fucking up terminal windows"""
