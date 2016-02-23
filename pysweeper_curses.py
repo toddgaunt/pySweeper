@@ -68,7 +68,6 @@ class AppUI(object):
     def prompt_message(self, window):
         """Depending on class variables menu, playing, and game_over, different prompts
         are displayed, calls info_message and get_coords to do so."""
-        curses.echo()
         if self.menu:
             window.clear()
             window.addstr(0,0, "Press r to start the game, q to quit.")
@@ -81,7 +80,6 @@ class AppUI(object):
             window.clear()
             window.addstr("Win = {}. You have {} wins and {} losses.".format(self.win, self.win_counter, self.loss_counter))
             window.refresh()
-        curses.noecho()
 
     def get_coords(self, window, board):
         """Catches String input from user, and returns a list with 3 groups, (x)(y)(f)."""
@@ -187,6 +185,19 @@ class AppUI(object):
             self.loss_counter += 1
 
     def refresh_windows(self):
+        """Handles input and refreshes windows"""
+        # If in menu input is handled here, windows will resize correctly, if done after they won't
+        # Absolutely must handle input only once and quickly
+        if self.menu == True:
+            input = self.stdscr.getch()
+            if input == ord('r'):
+                self.menu = False
+            if input == ord('q'):
+                self.playing=False
+        else:
+            input = self.stdscr.getch()
+            #self.get_coords() #use a function to get input for coords
+
         y, x = self.stdscr.getmaxyx()
         curses.resize_term(y, x)
         curses.KEY_RESIZE
@@ -204,6 +215,26 @@ class AppUI(object):
 
         curses.doupdate()
 
+    def draw_once(self):
+        """Refreshes all windows once without handling input"""
+        y, x = self.stdscr.getmaxyx()
+        curses.resize_term(y, x)
+        curses.KEY_RESIZE
+        self.stdscr.noutrefresh()
+
+        self.title_window()
+        self.prompt_window()
+        self.board_window()
+
+        for i in self.windows:
+            self.windows[i].noutrefresh()
+
+        for i in self.sub_windows:
+            self.sub_windows[i].noutrefresh()
+
+        curses.doupdate()
+
+
     def restore_term(self):
         """Restore terminal settings"""
         curses.nocbreak()
@@ -216,17 +247,9 @@ class AppUI(object):
 def main(stdscr):
     UI = AppUI(stdscr)
     UI.make_board()
-    while True:
+    UI.draw_once()
+    while UI.playing:
         UI.refresh_windows()
-        input = UI.stdscr.getch()
-        if UI.menu == True:
-            if input == ord('r'):
-                UI.menu = False
-                continue
-            if input == ord('q'):
-                break
-        else:
-            get_coords(input)
 
     # End of program
     UI.restore_term()
