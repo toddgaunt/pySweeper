@@ -9,6 +9,9 @@ import curses
 import time
 import re
 
+#TODO add support for flagging tiles back
+#WARNING: This code is really shitty curses programming, tis how I learned not to use the library
+
 class AppUI(object):
     def __init__(self, stdscr):
         # Initial variables
@@ -18,9 +21,18 @@ class AppUI(object):
         # Tracks if game should close or not
         self.playing = True
 
+        # Option to reveal board
+        self.revealed = False
+
         # Initial placeholder game board
         self.mine_brd = Board()
 
+        # Some variables for tracking coordinates
+        self.toggle=True
+        self.coords=['','']
+        self.fcrds=['','']
+
+        # Other vars
         self.board_size=10
         self.difficulty=5
         self.win = False
@@ -48,7 +60,7 @@ class AppUI(object):
         curses.init_pair(4, curses.COLOR_BLUE, curses.COLOR_BLACK)
         curses.init_pair(5, curses.COLOR_YELLOW, curses.COLOR_BLACK)
 
-        #self.refresh_windows()
+        self.init_windows()
 
     def board_window(self):
         # Draws the board_window
@@ -74,7 +86,7 @@ class AppUI(object):
         are displayed, calls info_message and get_coords to do so."""
         if self.prompt=="options":
             window.clear()
-            window.addstr(0,0, "Press a/z to inc/dec diff, b for back.")
+            window.addstr(0,0, "Press a/z to i/d dif, r to reveal, b for back.")
             window.chgat(0,0,curses.COLS-4,curses.color_pair(4))
         elif self.prompt=="menu":
             window.clear()
@@ -82,7 +94,7 @@ class AppUI(object):
             window.chgat(0,0,curses.COLS-4,curses.color_pair(4))
         elif self.prompt=="gamescr":
             window.clear()
-            window.addstr(0,0,"Enter x and y coordinates: x,y")
+            window.addstr(0,0,"Enter x and y coordinates: {},{}".format(self.fcrds[0],self.fcrds[1]))
             window.chgat(0,0,curses.COLS-4, curses.color_pair(3))
         else:
             window.clear()
@@ -107,21 +119,40 @@ class AppUI(object):
                 self.difficulty-=1
         if input == ord('b'):
             self.prompt="menu"
+        if input == ord('r'):
+            self.revealed=True
+        if input == 'q':
+            self.playing=False
 
     def playing_input(self, input):
-        if input == ord('q'):
-            self.playing=False
-        pass
+        try:
+            input = chr(input)
+            if input == 'q':
+                self.playing=False
+            if self.toggle:
+                self.fcrds[0]=input
+                self.coords[0]=input
+            else:
+                self.fcrds=['','']
+                self.coords[1]=input
+                # This bit of logic decides if the game ends or not
+                if self.parse_coords(self.coords):
+                    self.update_stats()
+                    self.prompt = "menu"
+            self.toggle = not self.toggle
+        except ValueError:
+            self.toggle = True
 
-    def parse_coords(self, coords, board):
+    def parse_coords(self, coords):
+        board = self.mine_brd
         x = int(coords[0])
         y = int(coords[1])
-        if coords[2] == 'f':
-            board[y][x].flag()
-        else:
+        #if coords[2] == 'f':
+        #    board[y][x].flag()
+        #else:
             # flip_cell() returns True if the cell is a mine
-            if board.flip_cell(y,x):
-                return True
+        if board.flip_cell(y,x):
+            return True
         return False
 
     def add_brd_str(self, window):
@@ -168,9 +199,10 @@ class AppUI(object):
         self.mine_brd = Board()
         self.mine_brd.plant_mines(self.difficulty)
         self.mine_brd.count_surrounding()
-        for y in range(self.mine_brd.y_length):
-            for x in range(self.mine_brd.x_length):
-                self.mine_brd[y][x].revealed=True
+        if self.revealed:
+            for y in range(self.mine_brd.y_length):
+                for x in range(self.mine_brd.x_length):
+                    self.mine_brd[y][x].revealed=True
 
     def update_stats(self):
         """Updates all game stats"""
@@ -250,12 +282,12 @@ class AppUI(object):
 
 def main(stdscr):
     UI = AppUI(stdscr)
-    UI.init_windows()
     while UI.playing:
         UI.refresh_windows()
 
     # End of program
     UI.restore_term()
+    print ("You had {} wins and {} losses!".format(UI.win_counter, UI.loss_counter))
 
 def get_coords(input):
     pass
