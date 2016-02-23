@@ -34,7 +34,7 @@ class AppUI(object):
 
         # Other vars
         self.board_size=10
-        self.difficulty=5
+        self.difficulty=2
         self.win = False
         self.win_counter = 0
         self.loss_counter = 0
