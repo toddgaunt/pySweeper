@@ -13,17 +13,18 @@ import re
 # caring about it's index number
 
 class AppUI(object):
-    def __init__(self, stdscr, playing=True, win=False, win_counter=0, loss_counter=0, game_time=0):
+    def __init__(self, stdscr):
         # Initial variables
-        self.playing = True
+        self.menu = True
+        self.playing = False
         self.win = False
         self.win_counter = 0
         self.loss_counter = 0
         self.game_time = 0
-        self.windows = []
-        self.sub_windows = []
+        self.windows = {}
+        self.sub_windows = {}
 
-        # Creating UI windows
+        # Main window
         self.stdscr = stdscr
 
         # Sets initial terminal properties
@@ -41,33 +42,46 @@ class AppUI(object):
         curses.init_pair(4, curses.COLOR_BLUE, curses.COLOR_BLACK)
         curses.init_pair(5, curses.COLOR_YELLOW, curses.COLOR_BLACK)
 
-        # Draws all main windows
-        self.draw_windows()
+        #self.refresh_windows()
 
-    def create_window(self, nlines, ncols, beginy, beginx):
-        """Function that creates a curses.window object and appends it to an array of windows"""
-        self.windows.append(curses.newwin(nlines, ncols, beginy, beginx))
+    def board_window(self):
+        # Draws the board_window
+        self.windows.update({"board": curses.newwin(curses.LINES-4, curses.COLS,1,0)})
+        self.sub_windows.update({"board": curses.newwin(curses.LINES-7, curses.COLS-3, 2, 2)})
+        self.windows["board"].box()
+        self.add_brd_str(self.sub_windows["board"])
 
-    def create_sub_window(self, window, nlines, ncols, beginy, beginx):
-        """Function that creates a window.sub_window object and appends it to an array of sub windows"""
-        self.sub_windows.append(self.windows[window].subwin(nlines, ncols, beginy, beginx))
+    def prompt_window(self):
+        # Draws prompt_window
+        self.windows.update({"prompt": curses.newwin(3, curses.COLS, curses.LINES-3, 0)})
+        self.sub_windows.update({"prompt": curses.newwin(1, curses.COLS-4, curses.LINES-2,2)})
+        self.windows["prompt"].box()
+        self.prompt_message(self.sub_windows["prompt"])
 
-    def title_message(self, window):
-        # Adds title and then colors whole line to top of stdscr
-        window.addstr("Pysweeper 1.1", curses.A_REVERSE)
-        window.chgat(-1, curses.A_REVERSE)
+    def title_window(self):
+        # Draws title_window
+        self.windows.update({"title": curses.newwin(1, curses.COLS, 0, 0)})
+        self.windows["title"].clear()
+        self.windows["title"].addstr("Pysweeper 2.0", curses.A_REVERSE)
+        self.windows["title"].chgat(-1, curses.A_REVERSE)
 
     def prompt_message(self, window):
-        """Prompts the user to start playing, and returns a character they input"""
-        window.clear()
-        window.addstr(0,0, "Press r to start the game, q to quit.")
-        window.chgat(0,0,curses.COLS-4,curses.color_pair(4))
-        window.refresh()
-        return window.getch()
+        """Depending on class variables menu, playing, and game_over, different prompts
+        are displayed, calls info_message and get_coords to do so."""
+        #if self.playing:
+        #    self.get_coords(window)
+        if False:
+            pass
+        elif self.menu:
+            window.clear()
+            window.addstr(0,0, "Press r to start the game, q to quit.")
+            window.chgat(0,0,curses.COLS-4,curses.color_pair(4))
+        else:
+            self.info_message(window)
 
     def info_message(self, window):
         window.clear()
-        window.addstr("\nWin = {}. You have {} wins and {} losses.".format(self.win, self.win_counter, self.loss_counter))
+        window.addstr("Win = {}. You have {} wins and {} losses.".format(self.win, self.win_counter, self.loss_counter))
         window.refresh()
 
     def get_coords(self, window, board):
@@ -79,7 +93,9 @@ class AppUI(object):
             window.chgat(0,0,curses.COLS-4, curses.color_pair(3))
             # Takes string for coordinates
             curses.echo()
-            caught_str = window.getstr(0,27).decode(encoding="utf-8")
+            caught_str=""
+            while True:
+                caught_str += window.getstr(0,27).decode(encoding="utf-8")
             curses.noecho()
             window.refresh()
             # Compares against regex
@@ -123,38 +139,48 @@ class AppUI(object):
                 return True
         return False
 
-    def add_brd_str(self, window, board):
+    def add_brd_str(self, window):
         """Displays all cells of the array into a curses window"""
-        window.clear()
-        y_flip = board.y_length - 1
-        for y in range(board.y_length):
-            window.addstr(y, 0, str(y_flip) + "-" )
-            for x in range(board.x_length):
-                if board[y_flip][x].revealed:
-                    tilech = board[y_flip][x].tile
-                    if tilech == 'X':
-                        tile_color = 2
-                    elif tilech == "0":
+        board = self.mine_brd
+        if self.playing:
+            window.clear()
+            y_flip = board.y_length - 1
+            for y in range(board.y_length):
+                window.addstr(y, 0, str(y_flip) + "-" )
+                for x in range(board.x_length):
+                    if board[y_flip][x].revealed:
+                        tilech = board[y_flip][x].tile
+                        if tilech == 'X':
+                            tile_color = 2
+                        elif tilech == "0":
+                            tile_color = 1
+                        elif tilech == "1":
+                            tile_color = 4
+                        elif tilech == "2":
+                            tile_color = 3
+                        else:
+                            tile_color = 5
+                    elif board[y_flip][x].flagged == True:
+                        tilech = "f"
                         tile_color = 1
-                    elif tilech == "1":
-                        tile_color = 4
-                    elif tilech == "2":
-                        tile_color = 3
                     else:
-                        tile_color = 5
-                elif board[y_flip][x].flagged == True:
-                    tilech = "f"
-                    tile_color = 1
-                else:
-                    tilech = "#"
-                    tile_color = 1
-                window.addstr(y, 2 + (x*2), str(tilech), curses.color_pair(tile_color))
+                        tilech = "#"
+                        tile_color = 1
+                    window.addstr(y, 2 + (x*2), str(tilech), curses.color_pair(tile_color))
+                y_flip -= 1
+            for x in range(board.x_length):
+                window.addstr(1 + y, 2 + (x * 2), "|")
+                window.addstr(2 + y, 2 + (x * 2), str(x))
+        else:
+            pass
 
-            y_flip -= 1
-        for x in range(board.x_length):
-            window.addstr(1 + y, 2 + (x * 2), "|")
-            window.addstr(2 + y, 2 + (x * 2), str(x))
-        window.refresh()
+    def make_board(self):
+        self.mine_brd = Board()
+        self.mine_brd.plant_mines()
+        self.mine_brd.count_surrounding()
+        for y in range(self.mine_brd.y_length):
+            for x in range(self.mine_brd.x_length):
+                self.mine_brd[y][x].revealed=True
 
     def update_stats(self):
         """Updates all game stats"""
@@ -163,41 +189,22 @@ class AppUI(object):
         elif self.win == False:
             self.loss_counter += 1
 
-    def draw_windows(self):
-        """Refreshes all window in class from the bottom up"""
-        """ Contains predfined properties of main UI windows"""
-        # Resizes windows to term size
+    def refresh_windows(self):
         y, x = self.stdscr.getmaxyx()
         curses.resize_term(y, x)
         curses.KEY_RESIZE
+        self.stdscr.noutrefresh()
 
-        # Resets window arrays
-        self.windows = []
-        self.sub_windows = []
+        self.title_window()
+        self.prompt_window()
+        self.board_window()
 
-        # Board window and sub window
-        self.create_window(curses.LINES-4, curses.COLS,1,0)
-        self.create_sub_window(0, curses.LINES-7, curses.COLS-3, 2, 2)
-        self.windows[0].box()
-
-        # Text window and sub window
-        self.create_window(3, curses.COLS, curses.LINES-3, 0)
-        self.create_sub_window(1, 1, curses.COLS-4, curses.LINES-2,2)
-        self.windows[1].box()
-
-        # Window for holding title
-        self.create_window(1, curses.COLS, 0, 0)
-
-        # draws title message
-        self.title_message(self.windows[2])
-
-        # Update internal window data structures
-        for i in range(len(self.windows)):
+        for i in self.windows:
             self.windows[i].noutrefresh()
-        for i in range(len(self.sub_windows)):
+
+        for i in self.sub_windows:
             self.sub_windows[i].noutrefresh()
 
-        # Redraws the screen
         curses.doupdate()
 
     def restore_term(self):
@@ -211,46 +218,11 @@ class AppUI(object):
 
 def main(stdscr):
     UI = AppUI(stdscr)
-    while UI.playing:
-        player_input = UI.prompt_message(UI.sub_windows[1])
-        if player_input == ord('r') or player_input == ord('R'):
-            # Initializes board
-            mine_brd = Board()
-
-            # Board generation message
-            UI.sub_windows[0].clear()
-            UI.sub_windows[0].addstr('Generating a board with {} length and {} height with {} mines.'.format(mine_brd.x_length, mine_brd.y_length, mine_brd.mined_tiles), curses.color_pair(3))
-            UI.sub_windows[0].refresh()
-            time.sleep(1)
-
-            # Initializes screen with game board
-            # Doesn't plant any mines or increment tiles until first coordinate has been chosen
-            UI.add_brd_str(window=UI.sub_windows[0], board=mine_brd)
-            coords = UI.get_coords(window=UI.sub_windows[1], board=mine_brd)
-            # Marks the cell as selected so that the plant_mines() function won't plant a mine there
-            mine_brd[int(coords[1])][int(coords[0])].selected = True
-            mine_brd.plant_mines()
-            mine_brd.count_surrounding()
-            game_over = UI.parse_coords(coords, mine_brd)
-            game_over = False
-            # prints board to curses window, then calls function to grab user input
-            while True:
-                UI.draw_windows()
-                UI.add_brd_str(window=UI.sub_windows[0], board=mine_brd)
-                coords = UI.get_coords(window=UI.sub_windows[1], board=mine_brd)
-                game_over = UI.parse_coords(coords, mine_brd)
-                if game_over:
-                    break
-            # Increments wins and losses
-            UI.update_stats()
-            # Prints game info to player after game is over
-            UI.info_message(UI.sub_windows[0])
-            time.sleep(1)
-
-        elif player_input == ord('q') or player_input == ord('Q'):
-            UI.playing = False
-
-        UI.draw_windows()
+    UI.playing = True
+    UI.make_board()
+    while True:
+        UI.refresh_windows()
+        UI.stdscr.getch()
     # End of program
     UI.restore_term()
 
