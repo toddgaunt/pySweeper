@@ -129,6 +129,11 @@ class AppUI(object):
             input = chr(input)
             if input == 'q':
                 self.playing=False
+            if input == 'b':
+                self.prompt="menu"
+                self.toggle = True
+                self.fcrds=['','']
+                return
             if self.toggle:
                 self.fcrds[0]=input
                 self.coords[0]=input
