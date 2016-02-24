@@ -6,6 +6,7 @@
 from curses import wrapper
 import curses
 import random
+#TODO allow players to specify board size
 #WARNING: This code is really shitty curses programming, tis how I learned not to use the library
 
 class Cell(object):
