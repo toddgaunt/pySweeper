@@ -3,14 +3,113 @@
 # apache 2.0
 # minesweeper game
 
-from pysweeper import Board, Cell
 from curses import wrapper
 import curses
 import time
 import re
-
-#TODO add support for flagging tiles back
+import random
 #WARNING: This code is really shitty curses programming, tis how I learned not to use the library
+
+class Cell(object):
+    """Is a single cell of the minesweeper board"""
+    def __init__(self, mine=False, revealed=False, flagged=False, selected=False, _tile=0):
+        self.mine = mine # Whether or not there is a mine
+        self.revealed = revealed # Whether or not the player can see the tile
+        self.flagged = flagged # Whether or not the player marked the tile
+        self.selected = selected # Whether or not the player has selected this tile
+        self._tile = _tile # The character used to represent the tile
+
+    def reveal(self):
+        self.revealed = True
+
+    def flag(self):
+        """toggles flags on a tile"""
+        self.flagged = not self.flagged
+
+    @property
+    def tile(self):
+        """returns a string of the tile."""
+        return str(self._tile)
+
+    @tile.setter
+    def tile(self, value):
+        self._tile = value
+        if value == "X":
+            self.mine = True
+        else:
+            self.mine = False
+
+    def increment_tile(self):
+        """If the tile is not a mine, increment it by 1"""
+        if not self.mine:
+            self.tile = str(int(self.tile) + 1)
+
+class Board(list):
+    """This Board object contains Cell objects within itself to represent the minesweeper game board"""
+    def __init__(self, x_length=10, y_length=10, mined_tiles=0, revealed_tiles=0, flagged_tiles=0):
+        self.x_length = x_length
+        self.y_length = y_length
+        self.mined_tiles = mined_tiles
+        self.revealed_tiles = revealed_tiles
+        self.flagged_tiles = flagged_tiles
+        for y in range(self.y_length):
+            self.append([])
+            for x in range(self.x_length):
+                self[y].append(Cell())
+
+    def plant_mines(self, diff):
+        """Plants exactly the amount of mines according to algorithm"""
+        count = (self.y_length * self.x_length / ((self.y_length + self.x_length) / (diff/2)))
+        while count > 0:
+            y = random.randint(0, self.y_length -1)
+            x = random.randint(0, self.x_length -1)
+            if self[y][x].mine or self[y][x].selected:
+                continue
+            else:
+                self[y][x].tile = "X"# mine=True
+                count -= 1
+
+    def count_surrounding(self):
+        """Check surrounding tiles of mines and increments them if they are not a mine"""
+        coordinates = [[-1, -1], [-1, 0], [-1, 1],
+                       [0 , -1],          [0 , 1],
+                       [1 , -1], [1 , 0], [1 , 1]]
+        for y in range(self.y_length):
+            for x in range(self.x_length):
+                if self[y][x].tile == "X":
+                    for i in range(len(coordinates)):
+                        y_offset = y+coordinates[i][0]
+                        x_offset = x+coordinates[i][1]
+                        if y_offset < 0 or y_offset >= self.y_length or x_offset >= self.x_length or x_offset < 0:
+                            continue
+                        self[y_offset][x_offset].increment_tile()
+
+    def flip_cell(self, y, x):
+        """Reveals the tile according to x,y coordinates. If the tile
+        is a mine returns True, else False. Auto_flips all 0s if a 0 is found"""
+        coordinates = [[-1, 0],
+               [0 , -1],      [0 , 1],
+                       [1 , 0]]
+        y = int(y)
+        x = int(x)
+        if self[y][x].revealed:
+            return False
+
+        # Reveals current cell
+        self[y][x].reveal()
+
+        if self[y][x].mine:
+            return True
+
+        if self[y][x].tile == "0":
+            for i in range(len(coordinates)):
+                y_offset = y+coordinates[i][0]
+                x_offset = x+coordinates[i][1]
+                # Prevents out_of_bounds errors from happening
+                if y_offset < 0 or y_offset >= self.y_length or x_offset >= self.x_length or x_offset < 0:
+                    continue
+                self.flip_cell(y_offset, x_offset)
+        return False
 
 class AppUI(object):
     def __init__(self, stdscr):
@@ -28,13 +127,17 @@ class AppUI(object):
         self.mine_brd = Board()
 
         # Some variables for tracking coordinates
+        self.first_move=True
         self.toggle=True
-        self.coords=['','']
-        self.fcrds=['','']
+        self.toggle2=True
+        self.coords=[' ',' ',' ']
+
+        # The coords the prompter displays
+        self.fcrds=[' ',' ',' ']
 
         # Other vars
         self.board_size=10
-        self.difficulty=2
+        self.difficulty=4
         self.win = False
         self.win_counter = 0
         self.loss_counter = 0
@@ -62,6 +165,13 @@ class AppUI(object):
 
         self.init_windows()
 
+    def title_window(self):
+        # Draws title_window
+        self.windows.update({"title": curses.newwin(1, curses.COLS, 0, 0)})
+        self.windows["title"].clear()
+        self.windows["title"].addstr("Pysweeper 2.0", curses.A_REVERSE)
+        self.windows["title"].chgat(-1, curses.A_REVERSE)
+
     def board_window(self):
         # Draws the board_window
         self.windows.update({"board": curses.newwin(curses.LINES-4, curses.COLS,1,0)})
@@ -73,13 +183,6 @@ class AppUI(object):
         self.windows.update({"prompt": curses.newwin(3, curses.COLS, curses.LINES-3, 0)})
         self.sub_windows.update({"prompt": curses.newwin(1, curses.COLS-4, curses.LINES-2,2)})
         self.windows["prompt"].box()
-
-    def title_window(self):
-        # Draws title_window
-        self.windows.update({"title": curses.newwin(1, curses.COLS, 0, 0)})
-        self.windows["title"].clear()
-        self.windows["title"].addstr("Pysweeper 2.0", curses.A_REVERSE)
-        self.windows["title"].chgat(-1, curses.A_REVERSE)
 
     def prompt_message(self, window):
         """Depending on class variables menu, playing, and game_over, different prompts
@@ -94,7 +197,7 @@ class AppUI(object):
             window.chgat(0,0,curses.COLS-4,curses.color_pair(4))
         elif self.prompt=="gamescr":
             window.clear()
-            window.addstr(0,0,"Enter x and y coordinates: {},{}".format(self.fcrds[0],self.fcrds[1]))
+            window.addstr(0,0,"Enter x and y coordinates: {},{}{}".format(self.fcrds[0],self.fcrds[1], self.fcrds[2]))
             window.chgat(0,0,curses.COLS-4, curses.color_pair(3))
         else:
             window.clear()
@@ -102,6 +205,7 @@ class AppUI(object):
             window.chgat(0,0,curses.COLS-4, curses.color_pair(3))
 
     def menu_input(self, input):
+        """Inputs for when in menu"""
         if input == ord('r'):
             self.prompt="gamescr"
             self.make_board()
@@ -111,6 +215,7 @@ class AppUI(object):
             self.playing=False
 
     def options_input(self, input):
+        """Inputs for when player is in options menu"""
         if input == ord('a'):
             if self.difficulty<10:
                 self.difficulty+=1
@@ -125,39 +230,60 @@ class AppUI(object):
             self.playing=False
 
     def playing_input(self, input):
+        """Inputs for when player is in gamescr mode"""
         try:
+            if input == 10 and self.toggle2:
+                self.toggle = True
+                self.toggle2 = True
+                self.fcrds=[' ',' ',' ']
+                return
             input = chr(input)
             if input == 'q':
                 self.playing=False
             if input == 'b':
                 self.prompt="menu"
                 self.toggle = True
-                self.fcrds=['','']
+                self.toggle2 = True
+                self.fcrds=[' ',' ',' ']
                 return
             if self.toggle:
-                self.fcrds[0]=input
                 self.coords[0]=input
-            else:
-                self.fcrds=['','']
+                self.fcrds[0]=input
+                self.toggle = not self.toggle
+            elif self.toggle2:
                 self.coords[1]=input
+                self.fcrds[1]=input
+                self.toggle2 = not self.toggle2
+            else:
+                self.fcrds=[' ',' ',' ']
+                self.coords[2]=input
                 # This bit of logic decides if the game ends or not
                 if self.parse_coords(self.coords):
                     self.update_stats()
                     self.prompt = "menu"
-            self.toggle = not self.toggle
-        except ValueError:
+                    self.first_move = True
+                self.toggle = not self.toggle
+                self.toggle2 = not self.toggle2
+        except ValueError or AttributeError:
+            self.fcrds=[' ',' ',' ']
             self.toggle = True
+            self.toggle2 = True
 
     def parse_coords(self, coords):
         board = self.mine_brd
         x = int(coords[0])
         y = int(coords[1])
-        #if coords[2] == 'f':
-        #    board[y][x].flag()
-        #else:
+        if self.first_move:
+            board[y][x].selected=True
+            self.first_move = False
+            # plants mines and counts numbers
+            self.make_board()
+        if coords[2] == 'f':
+            board[y][x].flag()
+        else:
             # flip_cell() returns True if the cell is a mine
-        if board.flip_cell(y,x):
-            return True
+            if board.flip_cell(y,x):
+                 return True
         return False
 
     def add_brd_str(self, window):
@@ -202,9 +328,11 @@ class AppUI(object):
             window.addstr("revealed: "+str(self.revealed)+"\n")
 
     def make_board(self):
-        self.mine_brd = Board()
-        self.mine_brd.plant_mines(self.difficulty)
-        self.mine_brd.count_surrounding()
+        if self.first_move:
+            self.mine_brd = Board()
+        else:
+            self.mine_brd.plant_mines(self.difficulty)
+            self.mine_brd.count_surrounding()
         if self.revealed:
             for y in range(self.mine_brd.y_length):
                 for x in range(self.mine_brd.x_length):
