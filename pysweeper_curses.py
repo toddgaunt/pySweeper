@@ -5,8 +5,6 @@
 
 from curses import wrapper
 import curses
-import time
-import re
 import random
 #WARNING: This code is really shitty curses programming, tis how I learned not to use the library
 
@@ -49,13 +47,14 @@ class Board(list):
     def __init__(self, x_length=10, y_length=10, mined_tiles=0, revealed_tiles=0, flagged_tiles=0):
         self.x_length = x_length
         self.y_length = y_length
-        self.mined_tiles = mined_tiles
-        self.revealed_tiles = revealed_tiles
-        self.flagged_tiles = flagged_tiles
+        self.mtiles = mined_tiles
+        self.rtiles = revealed_tiles
+        self.ftiles = flagged_tiles
         for y in range(self.y_length):
             self.append([])
             for x in range(self.x_length):
                 self[y].append(Cell())
+        self.alltiles = y_length * x_length
 
     def plant_mines(self, diff):
         """Plants exactly the amount of mines according to algorithm"""
@@ -67,6 +66,7 @@ class Board(list):
                 continue
             else:
                 self[y][x].tile = "X"# mine=True
+                self.mtiles += 1
                 count -= 1
 
     def count_surrounding(self):
@@ -97,6 +97,7 @@ class Board(list):
 
         # Reveals current cell
         self[y][x].reveal()
+        self.rtiles += 1
 
         if self[y][x].mine:
             return True
@@ -110,6 +111,11 @@ class Board(list):
                     continue
                 self.flip_cell(y_offset, x_offset)
         return False
+
+    def flag_cell(self,y,x):
+            self[y][x].flag()
+            self.ftiles += 1
+
 
 class AppUI(object):
     def __init__(self, stdscr):
@@ -241,10 +247,7 @@ class AppUI(object):
             if input == 'q':
                 self.playing=False
             if input == 'b':
-                self.prompt="menu"
-                self.toggle = True
-                self.toggle2 = True
-                self.fcrds=[' ',' ',' ']
+                self.return_menu()
                 return
             if self.toggle:
                 self.coords[0]=input
@@ -259,15 +262,29 @@ class AppUI(object):
                 self.coords[2]=input
                 # This bit of logic decides if the game ends or not
                 if self.parse_coords(self.coords):
+                    self.win = False
                     self.update_stats()
-                    self.prompt = "menu"
-                    self.first_move = True
+                    self.return_menu()
+                    return
+                if self.mine_brd.rtiles == self.mine_brd.alltiles - self.mine_brd.mtiles:
+                    self.win = True
+                    self.update_stats()
+                    self.return_menu()
+                    return
                 self.toggle = not self.toggle
                 self.toggle2 = not self.toggle2
         except ValueError or AttributeError:
             self.fcrds=[' ',' ',' ']
             self.toggle = True
             self.toggle2 = True
+
+    def return_menu(self):
+        self.prompt="menu"
+        self.toggle = True
+        self.toggle2 = True
+        self.coords=[' ',' ',' ']
+        self.fcrds=[' ',' ',' ']
+        self.first_move = True
 
     def parse_coords(self, coords):
         board = self.mine_brd
@@ -279,7 +296,7 @@ class AppUI(object):
             # plants mines and counts numbers
             self.make_board()
         if coords[2] == 'f':
-            board[y][x].flag()
+            board.flag_cell(y, x)
         else:
             # flip_cell() returns True if the cell is a mine
             if board.flip_cell(y,x):
@@ -289,8 +306,12 @@ class AppUI(object):
     def add_brd_str(self, window):
         """Displays string onto board window, usually all cells of the array into a curses window"""
         board = self.mine_brd
-        if self.prompt == "menu":
-            pass
+        if self.prompt == "menu" or self.prompt == "options":
+            window.clear()
+            window.addstr("difficulty: "+str(self.difficulty)+"\n")
+            window.addstr("wins: "+str(self.win_counter)+"\n")
+            window.addstr("losses: "+str(self.loss_counter)+"\n")
+            window.addstr("revealed: "+str(self.revealed)+"\n")
         elif self.prompt == "gamescr":
             window.clear()
             y_flip = board.y_length - 1
@@ -320,12 +341,6 @@ class AppUI(object):
             for x in range(board.x_length):
                 window.addstr(1 + y, 2 + (x * 2), "|")
                 window.addstr(2 + y, 2 + (x * 2), str(x))
-        elif self.prompt == "options":
-            window.clear()
-            window.addstr("difficulty: "+str(self.difficulty)+"\n")
-            window.addstr("wins: "+str(self.win_counter)+"\n")
-            window.addstr("losses: "+str(self.loss_counter)+"\n")
-            window.addstr("revealed: "+str(self.revealed)+"\n")
 
     def make_board(self):
         if self.first_move:
